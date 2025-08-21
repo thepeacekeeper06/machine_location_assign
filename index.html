@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Machine Data Recorder</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     <style>
         * {
@@ -495,15 +495,14 @@
             };
             
             try {
+                // Try using form data approach for better compatibility
+                const formData = new FormData();
+                formData.append('action', 'addMachine');
+                formData.append('machineData', JSON.stringify(machineData));
+                
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'addMachine',
-                        machineData: machineData
-                    })
+                    body: formData
                 });
                 
                 const result = await response.json();
@@ -547,16 +546,14 @@
             try {
                 showMessage('Updating location...', 'info');
                 
+                const formData = new FormData();
+                formData.append('action', 'updateLocation');
+                formData.append('machineId', currentMachineId);
+                formData.append('newLocation', newLocation);
+                
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'updateLocation',
-                        machineId: currentMachineId,
-                        newLocation: newLocation
-                    })
+                    body: formData
                 });
                 
                 const result = await response.json();
@@ -585,15 +582,13 @@
                 try {
                     showMessage('Deleting machine...', 'info');
                     
+                    const formData = new FormData();
+                    formData.append('action', 'deleteMachine');
+                    formData.append('machineId', machineId);
+                    
                     const response = await fetch(SCRIPT_URL, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            action: 'deleteMachine',
-                            machineId: machineId
-                        })
+                        body: formData
                     });
                     
                     const result = await response.json();
@@ -653,17 +648,34 @@
             // Create QR code data
             const qrData = `MACHINE_ID:${machineId}`;
             
-            QRCode.toCanvas(qrContainer, qrData, {
-                width: 200,
-                height: 200,
-                margin: 2,
-                color: {
-                    dark: '#667eea',
-                    light: '#ffffff'
+            try {
+                // Check if qrcode is available
+                if (typeof qrcode === 'undefined') {
+                    console.error('QR code library not loaded');
+                    qrContainer.innerHTML = '<p style="color: red;">QR Code library failed to load</p>';
+                    return;
                 }
-            }, function(error) {
-                if (error) console.error(error);
-            });
+                
+                // Create QR code using qrcode-generator
+                const qr = qrcode(0, 'M');
+                qr.addData(qrData);
+                qr.make();
+                
+                // Create the QR code as HTML
+                const qrHTML = qr.createImgTag(4, 8);
+                qrContainer.innerHTML = qrHTML;
+                
+                // Style the generated image
+                const img = qrContainer.querySelector('img');
+                if (img) {
+                    img.style.border = '10px solid white';
+                    img.style.borderRadius = '10px';
+                }
+                
+            } catch (error) {
+                console.error('Error generating QR code:', error);
+                qrContainer.innerHTML = '<p style="color: red;">Failed to generate QR code: ' + error.message + '</p>';
+            }
         }
 
         function resetForm() {
