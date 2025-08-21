@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Machine Data Recorder</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px;
+            background: white;
+            border: none;
+            border-radius: 10px;
+            color: #667eea;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .view {
+            display: none;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .qr-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .qr-code {
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .machine-card {
+            background: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .machine-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .machine-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .detail-item strong {
+            color: #667eea;
+        }
+
+        .location-section {
+            margin-bottom: 30px;
+        }
+
+        .location-header {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .scanner-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .scanner {
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .success-message, .error-message, .info-message {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .info-message {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .machine-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .machine-actions button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .nav-buttons {
+                flex-direction: column;
+            }
+            
+            .machine-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏭 Machine Data Recorder</h1>
+            <p>Track and manage your machines efficiently</p>
+        </div>
+
+        <div class="nav-buttons">
+            <button class="nav-btn active" onclick="showView('add')">Add Machine</button>
+            <button class="nav-btn" onclick="showView('scan')">Scan QR</button>
+            <button class="nav-btn" onclick="showView('location')">By Location</button>
+            <button class="nav-btn" onclick="showView('all')">All Machines</button>
+        </div>
+
+        <!-- Add Machine View -->
+        <div id="add-view" class="view active">
+            <h2>Add New Machine</h2>
+            <form id="machine-form">
+                <div class="form-group">
+                    <label for="machine-type">Machine Type *</label>
+                    <select id="machine-type" required>
+                        <option value="">Select Type</option>
+                        <option value="Lathe">Lathe</option>
+                        <option value="Milling">Milling Machine</option>
+                        <option value="Press">Press</option>
+                        <option value="Drill">Drill Press</option>
+                        <option value="Grinder">Grinder</option>
+                        <option value="Welder">Welder</option>
+                        <option value="CNC">CNC Machine</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="machine-number">Machine Number *</label>
+                    <input type="text" id="machine-number" required placeholder="e.g., M001, L-2024-01">
+                </div>
+
+                <div class="form-group">
+                    <label for="machine-age">Age (Years) *</label>
+                    <input type="number" id="machine-age" required min="0" max="100" placeholder="5">
+                </div>
+
+                <div class="form-group">
+                    <label for="machine-description">Description *</label>
+                    <textarea id="machine-description" required rows="3" placeholder="Brief description of the machine..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="machine-location">Location *</label>
+                    <select id="machine-location" required>
+                        <option value="">Select Location</option>
+                        <option value="Workshop A">Workshop A</option>
+                        <option value="Workshop B">Workshop B</option>
+                        <option value="Production Floor 1">Production Floor 1</option>
+                        <option value="Production Floor 2">Production Floor 2</option>
+                        <option value="Maintenance Bay">Maintenance Bay</option>
+                        <option value="Storage">Storage</option>
+                        <option value="Quality Control">Quality Control</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="machine-manufacturer">Manufacturer</label>
+                    <input type="text" id="machine-manufacturer" placeholder="e.g., Siemens, Honda">
+                </div>
+
+                <div class="form-group">
+                    <label for="machine-model">Model</label>
+                    <input type="text" id="machine-model" placeholder="Model number/name">
+                </div>
+
+                <div class="form-group">
+                    <label for="machine-serial">Serial Number</label>
+                    <input type="text" id="machine-serial" placeholder="Serial number">
+                </div>
+
+                <button type="submit" class="btn">Add Machine & Generate QR</button>
+            </form>
+
+            <div id="qr-result" style="display: none;">
+                <h3>Machine Added Successfully!</h3>
+                <div class="qr-container">
+                    <div id="qr-code" class="qr-code"></div>
+                    <p><strong>Machine ID:</strong> <span id="generated-id"></span></p>
+                    <p>Print this QR code and attach it to your machine</p>
+                </div>
+                <button class="btn btn-secondary" onclick="resetForm()">Add Another Machine</button>
+            </div>
+        </div>
+
+        <!-- Scan QR View -->
+        <div id="scan-view" class="view">
+            <h2>Scan Machine QR Code</h2>
+            <div class="scanner-container">
+                <button id="start-scan" class="btn">Start Camera</button>
+                <div id="scanner" class="scanner" style="display: none;"></div>
+                <button id="stop-scan" class="btn btn-secondary" style="display: none;">Stop Scanner</button>
+            </div>
+            
+            <div id="scan-result" style="display: none;">
+                <div id="scanned-machine" class="machine-card"></div>
+                <div class="form-group">
+                    <label for="new-location">Move to Location:</label>
+                    <select id="new-location">
+                        <option value="">Select New Location</option>
+                        <option value="Workshop A">Workshop A</option>
+                        <option value="Workshop B">Workshop B</option>
+                        <option value="Production Floor 1">Production Floor 1</option>
+                        <option value="Production Floor 2">Production Floor 2</option>
+                        <option value="Maintenance Bay">Maintenance Bay</option>
+                        <option value="Storage">Storage</option>
+                        <option value="Quality Control">Quality Control</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="updateLocation()">Update Location</button>
+                <button class="btn btn-secondary" onclick="resetScanner()">Scan Another</button>
+            </div>
+        </div>
+
+        <!-- Location View -->
+        <div id="location-view" class="view">
+            <h2>Machines by Location</h2>
+            <div id="location-list"></div>
+        </div>
+
+        <!-- All Machines View -->
+        <div id="all-view" class="view">
+            <h2>All Machines</h2>
+            <div id="machine-list"></div>
+        </div>
+
+        <!-- Footer -->
+        <div style="background: rgba(255,255,255,0.1); margin-top: 30px; padding: 20px; border-radius: 15px; text-align: center; color: white; font-size: 14px;">
+            <p style="margin: 0; font-weight: bold;">Powered by <strong>KL Technology Solutions</strong></p>
+            <p style="margin: 5px 0 0 0;">Attibele, Bangalore | <strong>📞 9900671351</strong></p>
+        </div>
+    </div>
+
+    <script>
+        // In-memory data storage (simulating Google Sheets)
+        let machines = [];
+        let currentMachineId = null;
+        let scanner = null;
+
+        // Google Apps Script URL - Replace with your deployed script URL
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzd3BzIN1a8dcttTsbE8JyZ-WFJ4tt4ZKamVqz-SI6eZX1m4eI2KqDKp6JoMzHEQPto/exec';
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load machines from Google Sheets
+            loadMachines();
+            
+            // Form submission
+            document.getElementById('machine-form').addEventListener('submit', addMachine);
+            
+            // Scanner controls
+            document.getElementById('start-scan').addEventListener('click', startScanner);
+            document.getElementById('stop-scan').addEventListener('click', stopScanner);
+        });
+
+        async function loadMachines() {
+            try {
+                showMessage('Loading machines...', 'info');
+                const response = await fetch(`${SCRIPT_URL}?action=getAllMachines`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    machines = data.machines || [];
+                    hideMessage();
+                } else {
+                    showMessage('Failed to load machines: ' + data.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error loading machines:', error);
+                showMessage('Failed to connect to database', 'error');
+                machines = []; // Fallback to empty array
+            }
+        }
+
+        function showView(viewName) {
+            // Hide all views
+            document.querySelectorAll('.view').forEach(view => {
+                view.classList.remove('active');
+            });
+            
+            // Remove active class from all nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected view
+            document.getElementById(viewName + '-view').classList.add('active');
+            
+            // Activate corresponding nav button
+            event.target.classList.add('active');
+            
+            // Load data for specific views
+            if (viewName === 'location') {
+                displayMachinesByLocation();
+            } else if (viewName === 'all') {
+                displayAllMachines();
+            }
+        }
+
+        async function addMachine(event) {
+            event.preventDefault();
+            
+            // Show loading message
+            showMessage('Adding machine...', 'info');
+            
+            // Get form data
+            const machineData = {
+                type: document.getElementById('machine-type').value,
+                number: document.getElementById('machine-number').value,
+                age: parseInt(document.getElementById('machine-age').value),
+                description: document.getElementById('machine-description').value,
+                location: document.getElementById('machine-location').value,
+                manufacturer: document.getElementById('machine-manufacturer').value || 'N/A',
+                model: document.getElementById('machine-model').value || 'N/A',
+                serial: document.getElementById('machine-serial').value || 'N/A',
+                dateAdded: new Date().toLocaleDateString()
+            };
+            
+            try {
+                // Send to Google Sheets
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'addMachine',
+                        data: machineData
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    const machineId = result.machineId;
+                    
+                    // Add to local array for immediate UI update
+                    machines.push({
+                        id: machineId,
+                        ...machineData
+                    });
+                    
+                    // Generate QR code
+                    generateQRCode(machineId);
+                    
+                    // Show success message
+                    showMessage('Machine added successfully!', 'success');
+                    
+                    // Hide form and show QR result
+                    document.getElementById('machine-form').style.display = 'none';
+                    document.getElementById('qr-result').style.display = 'block';
+                    document.getElementById('generated-id').textContent = machineId;
+                } else {
+                    showMessage('Failed to add machine: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error adding machine:', error);
+                showMessage('Failed to connect to database', 'error');
+            }
+        }
+
+        function generateQRCode(machineId) {
+            const qrContainer = document.getElementById('qr-code');
+            qrContainer.innerHTML = ''; // Clear previous QR code
+            
+            // Create QR code data (you can customize this URL)
+            const qrData = `MACHINE_ID:${machineId}`;
+            
+            QRCode.toCanvas(qrContainer, qrData, {
+                width: 200,
+                height: 200,
+                margin: 2,
+                color: {
+                    dark: '#667eea',
+                    light: '#ffffff'
+                }
+            }, function(error) {
+                if (error) console.error(error);
+            });
+        }
+
+        function resetForm() {
+            document.getElementById('machine-form').reset();
+            document.getElementById('machine-form').style.display = 'block';
+            document.getElementById('qr-result').style.display = 'none';
+        }
+
+        function startScanner() {
+            const scannerDiv = document.getElementById('scanner');
+            scannerDiv.style.display = 'block';
+            document.getElementById('start-scan').style.display = 'none';
+            document.getElementById('stop-scan').style.display = 'block';
+            
+            scanner = new Html5QrcodeScanner("scanner", {
+                qrbox: { width: 250, height: 250 },
+                fps: 5
+            });
+            
+            scanner.render(onScanSuccess, onScanError);
+        }
+
+        function stopScanner() {
+            if (scanner) {
+                scanner.clear();
+                scanner = null;
+            }
+            document.getElementById('scanner').style.display = 'none';
+            document.getElementById('start-scan').style.display = 'block';
+            document.getElementById('stop-scan').style.display = 'none';
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            // Extract machine ID from QR code
+            const machineId = decodedText.replace('MACHINE_ID:', '');
+            
+            // Find machine in data
+            const machine = machines.find(m => m.id === machineId);
+            
+            if (machine) {
+                displayScannedMachine(machine);
+                currentMachineId = machineId;
+                stopScanner();
+                document.getElementById('scan-result').style.display = 'block';
+            } else {
+                showMessage('Machine not found in database!', 'error');
+            }
+        }
+
+        function onScanError(errorMessage) {
+            // Handle scan error silently
+        }
+
+        function displayScannedMachine(machine) {
+            const container = document.getElementById('scanned-machine');
+            container.innerHTML = `
+                <h3>${machine.type} - ${machine.number}</h3>
+                <div class="machine-details">
+                    <div class="detail-item"><strong>ID:</strong> ${machine.id}</div>
+                    <div class="detail-item"><strong>Age:</strong> ${machine.age} years</div>
+                    <div class="detail-item"><strong>Location:</strong> ${machine.location}</div>
+                    <div class="detail-item"><strong>Manufacturer:</strong> ${machine.manufacturer}</div>
+                    <div class="detail-item"><strong>Model:</strong> ${machine.model}</div>
+                    <div class="detail-item"><strong>Serial:</strong> ${machine.serial}</div>
+                </div>
+                <p><strong>Description:</strong> ${machine.description}</p>
+            `;
+        }
+
+        async function updateLocation() {
+            const newLocation = document.getElementById('new-location').value;
+            if (!newLocation) {
+                showMessage('Please select a new location!', 'error');
+                return;
+            }
+            
+            try {
+                showMessage('Updating location...', 'info');
+                
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'updateLocation',
+                        machineId: currentMachineId,
+                        newLocation: newLocation
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update local array
+                    const machineIndex = machines.findIndex(m => m.id === currentMachineId);
+                    if (machineIndex !== -1) {
+                        machines[machineIndex].location = newLocation;
+                    }
+                    
+                    showMessage(`Machine ${currentMachineId} moved to ${newLocation}!`, 'success');
+                    resetScanner();
+                } else {
+                    showMessage('Failed to update location: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error updating location:', error);
+                showMessage('Failed to connect to database', 'error');
+            }
+        }
+
+        function resetScanner() {
+            document.getElementById('scan-result').style.display = 'none';
+            document.getElementById('new-location').value = '';
+            currentMachineId = null;
+        }
+
+        function displayMachinesByLocation() {
+            const container = document.getElementById('location-list');
+            const locationGroups = {};
+            
+            // Group machines by location
+            machines.forEach(machine => {
+                if (!locationGroups[machine.location]) {
+                    locationGroups[machine.location] = [];
+                }
+                locationGroups[machine.location].push(machine);
+            });
+            
+            // Generate HTML
+            let html = '';
+            Object.keys(locationGroups).forEach(location => {
+                html += `
+                    <div class="location-section">
+                        <div class="location-header">
+                            📍 ${location} (${locationGroups[location].length} machines)
+                        </div>
+                `;
+                
+                locationGroups[location].forEach(machine => {
+                    html += createMachineCard(machine);
+                });
+                
+                html += '</div>';
+            });
+            
+            container.innerHTML = html || '<p>No machines found.</p>';
+        }
+
+        function displayAllMachines() {
+            const container = document.getElementById('machine-list');
+            let html = '';
+            
+            machines.forEach(machine => {
+                html += createMachineCard(machine);
+            });
+            
+            container.innerHTML = html || '<p>No machines found.</p>';
+        }
+
+        function createMachineCard(machine) {
+            return `
+                <div class="machine-card">
+                    <h3>${machine.type} - ${machine.number}</h3>
+                    <div class="machine-details">
+                        <div class="detail-item"><strong>ID:</strong> ${machine.id}</div>
+                        <div class="detail-item"><strong>Age:</strong> ${machine.age} years</div>
+                        <div class="detail-item"><strong>Location:</strong> ${machine.location}</div>
+                        <div class="detail-item"><strong>Manufacturer:</strong> ${machine.manufacturer}</div>
+                        <div class="detail-item"><strong>Model:</strong> ${machine.model}</div>
+                        <div class="detail-item"><strong>Serial:</strong> ${machine.serial}</div>
+                        <div class="detail-item"><strong>Added:</strong> ${machine.dateAdded}</div>
+                    </div>
+                    <p><strong>Description:</strong> ${machine.description}</p>
+                    <div class="machine-actions">
+                        <button onclick="generateQRCode('${machine.id}')" style="background: #667eea; color: white;">Generate QR</button>
+                        <button onclick="deleteMachine('${machine.id}')" style="background: #dc3545; color: white;">Delete</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function deleteMachine(machineId) {
+            if (confirm('Are you sure you want to delete this machine?')) {
+                try {
+                    showMessage('Deleting machine...', 'info');
+                    
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            action: 'deleteMachine',
+                            machineId: machineId
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Remove from local array
+                        machines = machines.filter(m => m.id !== machineId);
+                        showMessage('Machine deleted successfully!', 'success');
+                        
+                        // Refresh current view
+                        const activeView = document.querySelector('.nav-btn.active').textContent.toLowerCase();
+                        if (activeView.includes('location')) {
+                            displayMachinesByLocation();
+                        } else if (activeView.includes('all')) {
+                            displayAllMachines();
+                        }
+                    } else {
+                        showMessage('Failed to delete machine: ' + result.error, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error deleting machine:', error);
+                    showMessage('Failed to connect to database', 'error');
+                }
+            }
+        }
+
+        function showMessage(message, type) {
+            // Remove existing messages
+            const existingMessages = document.querySelectorAll('.success-message, .error-message, .info-message');
+            existingMessages.forEach(msg => msg.remove());
+            
+            // Create new message
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type + '-message';
+            messageDiv.textContent = message;
+            
+            // Insert at the top of the active view
+            const activeView = document.querySelector('.view.active');
+            activeView.insertBefore(messageDiv, activeView.firstChild);
+            
+            // Auto-remove after 3 seconds (except for info messages during loading)
+            if (type !== 'info') {
+                setTimeout(() => {
+                    messageDiv.remove();
+                }, 3000);
+            }
+        }
+
+        function hideMessage() {
+            const messages = document.querySelectorAll('.success-message, .error-message, .info-message');
+            messages.forEach(msg => msg.remove());
+        }
+    </script>
+</body>
+</html>
