@@ -18,6 +18,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             color: #333;
+            padding-bottom: 80px;
         }
 
         .container {
@@ -243,6 +244,31 @@
             transition: all 0.3s ease;
         }
 
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(0,0,0,0.1);
+            padding: 8px 0;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            z-index: 1000;
+        }
+
+        .footer .company-name {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .footer .contact {
+            color: #667eea;
+            font-weight: 500;
+        }
+
         @media (max-width: 480px) {
             .container {
                 padding: 10px;
@@ -393,22 +419,22 @@
             <h2>All Machines</h2>
             <div id="machine-list"></div>
         </div>
+    </div>
 
-        <!-- Footer -->
-        <div style="background: rgba(255,255,255,0.1); margin-top: 30px; padding: 20px; border-radius: 15px; text-align: center; color: white; font-size: 14px;">
-            <p style="margin: 0; font-weight: bold;">Powered by <strong>KL Technology Solutions</strong></p>
-            <p style="margin: 5px 0 0 0;">Attibele, Bangalore | <strong>📞 9900671351</strong></p>
-        </div>
+    <!-- Footer -->
+    <div class="footer">
+        <div>Powered by <span class="company-name">KL Technology Solutions</span></div>
+        <div>Attibele, Bangalore | <span class="contact">📞 9900671351</span></div>
     </div>
 
     <script>
-        // In-memory data storage (simulating Google Sheets)
+        // Google Apps Script URL - Replace with your deployed script URL
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyBKkYAnCdEm1QZuD-okrND_ZKBDrXa6i-gClePHoq8VSW_vbMD_R0v1_WBVHnFGvI_/exec';
+
+        // App state
         let machines = [];
         let currentMachineId = null;
         let scanner = null;
-
-        // Google Apps Script URL - Replace with your deployed script URL
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyOUdAbmKC8KVAsXLx0VizrZURajrN-hU90rJAVoSsXf4ZrM26xfQ2rzbhaAKGiEt1Z/exec';
 
         // Initialize the app
         document.addEventListener('DOMContentLoaded', function() {
@@ -423,104 +449,36 @@
             document.getElementById('stop-scan').addEventListener('click', stopScanner);
         });
 
+        // Load machines from Google Sheets
         async function loadMachines() {
             try {
                 showMessage('Loading machines...', 'info');
                 
-                // Use JSONP approach for CORS compatibility
-                const response = await makeGASRequest('getAllMachines');
+                console.log('Loading machines from:', SCRIPT_URL);
                 
-                if (response.success) {
-                    machines = response.machines || [];
+                const response = await fetch(SCRIPT_URL + '?action=getAllMachines');
+                const data = await response.json();
+                
+                console.log('Load response:', data);
+                
+                if (data.success) {
+                    machines = data.machines || [];
                     hideMessage();
+                    console.log('Loaded', machines.length, 'machines');
                 } else {
-                    showMessage('Failed to load machines: ' + response.error, 'error');
+                    showMessage('Failed to load machines: ' + data.error, 'error');
                 }
             } catch (error) {
                 console.error('Error loading machines:', error);
-                showMessage('Failed to connect to database', 'error');
-                machines = []; // Fallback to empty array
+                showMessage('Failed to connect to database: ' + error.message, 'error');
+                machines = [];
             }
         }
 
-        // CORS-compatible function to make requests to Google Apps Script
-        async function makeGASRequest(action, data = null, method = 'GET') {
-            return new Promise((resolve, reject) => {
-                const callbackName = 'callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                
-                window[callbackName] = function(response) {
-                    document.head.removeChild(script);
-                    delete window[callbackName];
-                    resolve(response);
-                };
-                
-                const script = document.createElement('script');
-                let url = SCRIPT_URL + '?callback=' + callbackName;
-                
-                if (method === 'GET') {
-                    url += '&action=' + action;
-                    if (data) {
-                        Object.keys(data).forEach(key => {
-                            url += '&' + key + '=' + encodeURIComponent(data[key]);
-                        });
-                    }
-                } else {
-                    // For POST requests, we'll use URL parameters as well
-                    url += '&action=' + action;
-                    if (data) {
-                        url += '&data=' + encodeURIComponent(JSON.stringify(data));
-                    }
-                }
-                
-                script.onerror = () => {
-                    document.head.removeChild(script);
-                    delete window[callbackName];
-                    reject(new Error('Failed to load script'));
-                };
-                
-                script.src = url;
-                document.head.appendChild(script);
-                
-                // Timeout after 30 seconds
-                setTimeout(() => {
-                    if (window[callbackName]) {
-                        document.head.removeChild(script);
-                        delete window[callbackName];
-                        reject(new Error('Request timeout'));
-                    }
-                }, 30000);
-            });
-        }
-
-        function showView(viewName) {
-            // Hide all views
-            document.querySelectorAll('.view').forEach(view => {
-                view.classList.remove('active');
-            });
-            
-            // Remove active class from all nav buttons
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Show selected view
-            document.getElementById(viewName + '-view').classList.add('active');
-            
-            // Activate corresponding nav button
-            event.target.classList.add('active');
-            
-            // Load data for specific views
-            if (viewName === 'location') {
-                displayMachinesByLocation();
-            } else if (viewName === 'all') {
-                displayAllMachines();
-            }
-        }
-
+        // Add new machine
         async function addMachine(event) {
             event.preventDefault();
             
-            // Show loading message
             showMessage('Adding machine...', 'info');
             
             // Get form data
@@ -537,8 +495,18 @@
             };
             
             try {
-                // Send to Google Sheets using CORS-compatible method
-                const result = await makeGASRequest('addMachine', machineData, 'GET');
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'addMachine',
+                        machineData: machineData
+                    })
+                });
+                
+                const result = await response.json();
                 
                 if (result.success) {
                     const machineId = result.machineId;
@@ -564,7 +532,117 @@
                 }
             } catch (error) {
                 console.error('Error adding machine:', error);
-                showMessage('Failed to connect to database', 'error');
+                showMessage('Failed to connect to database: ' + error.message, 'error');
+            }
+        }
+
+        // Update machine location
+        async function updateLocation() {
+            const newLocation = document.getElementById('new-location').value;
+            if (!newLocation) {
+                showMessage('Please select a new location!', 'error');
+                return;
+            }
+            
+            try {
+                showMessage('Updating location...', 'info');
+                
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'updateLocation',
+                        machineId: currentMachineId,
+                        newLocation: newLocation
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update local array
+                    const machineIndex = machines.findIndex(m => m.id === currentMachineId);
+                    if (machineIndex !== -1) {
+                        machines[machineIndex].location = newLocation;
+                    }
+                    
+                    showMessage(`Machine ${currentMachineId} moved to ${newLocation}!`, 'success');
+                    resetScanner();
+                } else {
+                    showMessage('Failed to update location: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error updating location:', error);
+                showMessage('Failed to connect to database: ' + error.message, 'error');
+            }
+        }
+
+        // Delete machine
+        async function deleteMachine(machineId) {
+            if (confirm('Are you sure you want to delete this machine?')) {
+                try {
+                    showMessage('Deleting machine...', 'info');
+                    
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            action: 'deleteMachine',
+                            machineId: machineId
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Remove from local array
+                        machines = machines.filter(m => m.id !== machineId);
+                        showMessage('Machine deleted successfully!', 'success');
+                        
+                        // Refresh current view
+                        const activeView = document.querySelector('.nav-btn.active').textContent.toLowerCase();
+                        if (activeView.includes('location')) {
+                            displayMachinesByLocation();
+                        } else if (activeView.includes('all')) {
+                            displayAllMachines();
+                        }
+                    } else {
+                        showMessage('Failed to delete machine: ' + result.error, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error deleting machine:', error);
+                    showMessage('Failed to connect to database: ' + error.message, 'error');
+                }
+            }
+        }
+
+        // UI Helper Functions
+        function showView(viewName) {
+            // Hide all views
+            document.querySelectorAll('.view').forEach(view => {
+                view.classList.remove('active');
+            });
+            
+            // Remove active class from all nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected view
+            document.getElementById(viewName + '-view').classList.add('active');
+            
+            // Activate corresponding nav button
+            event.target.classList.add('active');
+            
+            // Load data for specific views
+            if (viewName === 'location') {
+                displayMachinesByLocation();
+            } else if (viewName === 'all') {
+                displayAllMachines();
             }
         }
 
@@ -572,7 +650,7 @@
             const qrContainer = document.getElementById('qr-code');
             qrContainer.innerHTML = ''; // Clear previous QR code
             
-            // Create QR code data (you can customize this URL)
+            // Create QR code data
             const qrData = `MACHINE_ID:${machineId}`;
             
             QRCode.toCanvas(qrContainer, qrData, {
@@ -655,39 +733,6 @@
             `;
         }
 
-        async function updateLocation() {
-            const newLocation = document.getElementById('new-location').value;
-            if (!newLocation) {
-                showMessage('Please select a new location!', 'error');
-                return;
-            }
-            
-            try {
-                showMessage('Updating location...', 'info');
-                
-                const result = await makeGASRequest('updateLocation', {
-                    machineId: currentMachineId,
-                    newLocation: newLocation
-                }, 'GET');
-                
-                if (result.success) {
-                    // Update local array
-                    const machineIndex = machines.findIndex(m => m.id === currentMachineId);
-                    if (machineIndex !== -1) {
-                        machines[machineIndex].location = newLocation;
-                    }
-                    
-                    showMessage(`Machine ${currentMachineId} moved to ${newLocation}!`, 'success');
-                    resetScanner();
-                } else {
-                    showMessage('Failed to update location: ' + result.error, 'error');
-                }
-            } catch (error) {
-                console.error('Error updating location:', error);
-                showMessage('Failed to connect to database', 'error');
-            }
-        }
-
         function resetScanner() {
             document.getElementById('scan-result').style.display = 'none';
             document.getElementById('new-location').value = '';
@@ -748,7 +793,6 @@
                         <div class="detail-item"><strong>Manufacturer:</strong> ${machine.manufacturer}</div>
                         <div class="detail-item"><strong>Model:</strong> ${machine.model}</div>
                         <div class="detail-item"><strong>Serial:</strong> ${machine.serial}</div>
-                        <div class="detail-item"><strong>Added:</strong> ${machine.dateAdded}</div>
                     </div>
                     <p><strong>Description:</strong> ${machine.description}</p>
                     <div class="machine-actions">
@@ -757,37 +801,6 @@
                     </div>
                 </div>
             `;
-        }
-
-        async function deleteMachine(machineId) {
-            if (confirm('Are you sure you want to delete this machine?')) {
-                try {
-                    showMessage('Deleting machine...', 'info');
-                    
-                    const result = await makeGASRequest('deleteMachine', {
-                        machineId: machineId
-                    }, 'GET');
-                    
-                    if (result.success) {
-                        // Remove from local array
-                        machines = machines.filter(m => m.id !== machineId);
-                        showMessage('Machine deleted successfully!', 'success');
-                        
-                        // Refresh current view
-                        const activeView = document.querySelector('.nav-btn.active').textContent.toLowerCase();
-                        if (activeView.includes('location')) {
-                            displayMachinesByLocation();
-                        } else if (activeView.includes('all')) {
-                            displayAllMachines();
-                        }
-                    } else {
-                        showMessage('Failed to delete machine: ' + result.error, 'error');
-                    }
-                } catch (error) {
-                    console.error('Error deleting machine:', error);
-                    showMessage('Failed to connect to database', 'error');
-                }
-            }
         }
 
         function showMessage(message, type) {
@@ -807,7 +820,9 @@
             // Auto-remove after 3 seconds (except for info messages during loading)
             if (type !== 'info') {
                 setTimeout(() => {
-                    messageDiv.remove();
+                    if (messageDiv.parentNode) {
+                        messageDiv.remove();
+                    }
                 }, 3000);
             }
         }
