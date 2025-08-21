@@ -4,10 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Machine Data Recorder</title>
+    <!-- Preload Font Awesome -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
+    <!-- Google Material Icons as backup -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Font Awesome for icons - Primary -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <!-- Font Awesome Backup from jsdelivr -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" media="none" onload="if(media!='all')media='all'">
     <!-- QR Code library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <!-- Chart.js for analytics -->
@@ -25,7 +31,7 @@
             --success-bg: #ecfdf5;
             --border-radius: 12px;
             --text-color: #1f2937;
-            --footer-height: 80px;
+            --footer-height: 60px;
             --gradient-primary: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
             --gradient-secondary: linear-gradient(135deg, #06b6d4 0%, #10b981 100%);
             --gradient-accent: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
@@ -53,7 +59,7 @@
         .main-content {
             flex: 1;
             padding: 10px;
-            padding-bottom: calc(var(--footer-height) + 20px);
+            padding-bottom: calc(var(--footer-height) + 15px);
             overflow-y: auto;
         }
         
@@ -113,20 +119,28 @@
         .nav-pills {
             background: white;
             border-radius: 15px;
-            padding: 8px;
+            padding: 6px;
             box-shadow: var(--card-shadow);
             margin-bottom: 20px;
         }
         
         .nav-pills .nav-link {
             border-radius: 12px;
-            padding: 12px 20px;
-            margin: 0 2px;
+            padding: 16px 24px;
+            margin: 0 3px;
             font-weight: 600;
             transition: all 0.3s ease;
             color: var(--text-color);
             text-align: center;
-            font-size: 0.9rem;
+            font-size: 1rem;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
         }
         
         .nav-pills .nav-link.active {
@@ -139,6 +153,10 @@
         .nav-pills .nav-link:not(.active):hover {
             background-color: rgba(139, 92, 246, 0.1);
             transform: translateY(-1px);
+        }
+        
+        .nav-pills .nav-link:active {
+            transform: translateY(0);
         }
         
         .form-control, .form-select {
@@ -291,14 +309,16 @@
             bottom: 0;
             left: 0;
             right: 0;
-            height: var(--footer-height);
-            background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+            height: 60px;
+            background: rgba(55, 65, 81, 0.95);
+            backdrop-filter: blur(10px);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 999;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            font-size: 0.8rem;
         }
         
         .footer::before {
@@ -307,8 +327,9 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 3px;
+            height: 2px;
             background: var(--gradient-primary);
+            opacity: 0.8;
         }
         
         .tab-content {
@@ -322,6 +343,16 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .nav-pills .nav-link:active {
+            animation: pulse 0.2s ease-in-out;
         }
         
         /* Mobile specific improvements */
@@ -344,16 +375,28 @@
                 font-size: 0.9rem;
             }
             
+            .nav-pills {
+                padding: 4px;
+                margin-bottom: 15px;
+            }
+            
             .nav-pills .nav-link {
-                padding: 10px 12px;
-                font-size: 0.8rem;
+                padding: 18px 16px;
+                font-size: 0.9rem;
                 margin: 0 1px;
+                min-height: 70px;
+                border-radius: 10px;
             }
             
             .nav-pills .nav-link i {
+                font-size: 1.4rem;
+                margin-bottom: 6px;
                 display: block;
-                margin-bottom: 4px;
-                font-size: 1.2rem;
+            }
+            
+            .nav-pills .nav-link .d-sm-none {
+                font-size: 0.8rem;
+                margin-top: 2px;
             }
             
             .card {
@@ -391,12 +434,14 @@
             }
             
             .footer {
-                font-size: 0.85rem;
+                font-size: 0.75rem;
                 padding: 0 10px;
+                height: 50px;
             }
             
             .footer p {
-                margin-bottom: 2px;
+                margin-bottom: 1px;
+                line-height: 1.2;
             }
             
             .d-none-mobile {
@@ -410,13 +455,48 @@
                 font-size: 1.3rem !important;
             }
             
+            .nav-pills {
+                padding: 3px;
+            }
+            
             .nav-pills .nav-link {
-                padding: 8px 8px;
-                font-size: 0.7rem;
+                padding: 20px 12px;
+                font-size: 0.8rem;
+                margin: 0 1px;
+                min-height: 75px;
+                border-radius: 8px;
             }
             
             .nav-pills .nav-link i {
-                font-size: 1rem;
+                font-size: 1.6rem;
+                margin-bottom: 8px;
+            }
+            
+            .nav-pills .nav-link .d-sm-none {
+                font-size: 0.75rem;
+                font-weight: 700;
+                margin-top: 3px;
+            }
+            
+            .footer {
+                height: 45px;
+                font-size: 0.7rem;
+            }
+            
+            .footer::before {
+                height: 1px;
+            }
+            
+            .footer p {
+                margin-bottom: 0;
+            }
+            
+            .floating-action-btn {
+                bottom: calc(45px + 12px);
+            }
+            
+            .main-content {
+                padding-bottom: calc(45px + 10px);
             }
         }
         
@@ -436,7 +516,39 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* Custom scrollbar */
+        /* Icon fallbacks and ensures - Enhanced */
+        @font-face {
+            font-family: 'Font Awesome 6 Free';
+            font-style: normal;
+            font-weight: 900;
+            font-display: swap;
+            src: url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/webfonts/fa-solid-900.woff2') format('woff2');
+        }
+        
+        .fa, .fas, .far, .fal, .fab {
+            font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", FontAwesome, sans-serif !important;
+            font-weight: 900 !important;
+            font-style: normal !important;
+            display: inline-block;
+            text-rendering: auto;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Fallback for missing icons */
+        .icon-fallback::before {
+            content: "●";
+            margin-right: 8px;
+        }
+        
+        /* Ensure icons are visible with higher specificity */
+        i[class*="fa-"], .fa, .fas, .far, .fal, .fab {
+            font-family: "Font Awesome 6 Free" !important;
+            font-weight: 900 !important;
+            font-style: normal !important;
+            line-height: 1;
+            text-decoration: none !important;
+        }
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -518,7 +630,7 @@
             <div class="header">
                 <div class="row align-items-center">
                     <div class="col-auto">
-                        <i class="fas fa-cogs fa-2x"></i>
+                        <i class="fas fa-cogs fa-2x" aria-hidden="true"></i>
                     </div>
                     <div class="col">
                         <h1 class="fs-2 fw-bold text-white mb-1">Machine Data Recorder</h1>
@@ -526,7 +638,7 @@
                     </div>
                     <div class="col-auto d-none-mobile">
                         <div class="bg-white bg-opacity-10 px-3 py-2 rounded-pill">
-                            <i class="fas fa-calendar-alt text-white"></i>
+                            <i class="fas fa-calendar-alt text-white" aria-hidden="true"></i>
                             <span class="ms-2 text-white fw-medium" id="current-date"></span>
                         </div>
                     </div>
@@ -537,21 +649,21 @@
             <ul class="nav nav-pills justify-content-center" id="machine-tabs" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="registration-tab" data-bs-toggle="tab" data-bs-target="#registration" type="button" role="tab">
-                        <i class="fas fa-plus-circle"></i>
+                        <i class="fas fa-plus-circle" aria-hidden="true"></i>
                         <span class="d-none d-sm-inline ms-2">Add Machine</span>
                         <span class="d-sm-none">Add</span>
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="scanner-tab" data-bs-toggle="tab" data-bs-target="#scanner" type="button" role="tab">
-                        <i class="fas fa-qrcode"></i>
+                        <i class="fas fa-qrcode" aria-hidden="true"></i>
                         <span class="d-none d-sm-inline ms-2">QR Scanner</span>
                         <span class="d-sm-none">Scan</span>
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="locations-tab" data-bs-toggle="tab" data-bs-target="#locations" type="button" role="tab">
-                        <i class="fas fa-map-marker-alt"></i>
+                        <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
                         <span class="d-none d-sm-inline ms-2">Machines & Locations</span>
                         <span class="d-sm-none">Locations</span>
                     </button>
@@ -833,7 +945,10 @@
                             </div>
 
                             <div id="machine-list-container">
-                                <!-- Machine list will be populated here -->
+                                <div class="text-center py-4 text-muted">
+                                    <div class="loading-spinner"></div>
+                                    Loading machines...
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -890,10 +1005,10 @@
     <!-- Fixed Footer -->
     <div class="footer">
         <div class="text-center">
-            <p class="mb-1 fw-medium">Powered by <strong>KL Technology Solutions</strong></p>
-            <p class="mb-0">
-                <i class="fas fa-map-marker-alt me-2"></i>Attibele, Bangalore | 
-                <i class="fas fa-phone-alt me-1 ms-3"></i><strong>9900671351</strong>
+            <p class="mb-0 fw-medium">
+                <span class="d-none d-sm-inline">Powered by </span><strong>KL Technology Solutions</strong>
+                <span class="d-none d-md-inline"> | <i class="fas fa-map-marker-alt me-1"></i>Attibele, Bangalore</span>
+                <span class="ms-2"><i class="fas fa-phone-alt me-1"></i><strong>9900671351</strong></span>
             </p>
         </div>
     </div>
@@ -910,9 +1025,29 @@
         let html5QrCode;
         let currentView = 'location'; // 'location' or 'list'
         let isLocalStorageMode = false; // Set to false when using Google Sheets
+        let refreshInterval;
+        let isInitialLoad = true;
 
         // Initialize the app
         document.addEventListener('DOMContentLoaded', function() {
+            // Check if Font Awesome loaded properly with retry mechanism
+            let retryCount = 0;
+            const maxRetries = 3;
+            
+            function checkIconsWithRetry() {
+                if (retryCount < maxRetries) {
+                    setTimeout(function() {
+                        checkFontAwesome();
+                        retryCount++;
+                        if (retryCount < maxRetries) {
+                            checkIconsWithRetry();
+                        }
+                    }, 1000 * retryCount);
+                }
+            }
+            
+            checkIconsWithRetry();
+            
             // Set current date
             document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', {
                 weekday: 'long',
@@ -933,6 +1068,9 @@
 
             // Load machine list
             loadMachineList();
+            
+            // Set up automatic refresh every 30 seconds
+            startAutoRefresh();
 
             // Initialize tab events
             const triggerTabList = document.querySelectorAll('#machine-tabs button');
@@ -1020,6 +1158,15 @@
         // Show registration success
         function showRegistrationSuccess(machineID) {
             updateStatistics();
+            
+            // Refresh the current view if on locations tab
+            if (document.getElementById('locations-tab').classList.contains('active')) {
+                if (currentView === 'location') {
+                    loadLocationsList(true);
+                } else if (currentView === 'list') {
+                    loadMachineListView(true);
+                }
+            }
             
             document.getElementById('machine-id').textContent = machineID;
             generateQRCode(machineID);
@@ -1295,6 +1442,15 @@
         function showLocationUpdateSuccess() {
             updateStatistics();
             
+            // Refresh the current view if on locations tab
+            if (document.getElementById('locations-tab').classList.contains('active')) {
+                if (currentView === 'location') {
+                    loadLocationsList(true);
+                } else if (currentView === 'list') {
+                    loadMachineListView(true);
+                }
+            }
+            
             alert('Machine location updated successfully!');
             cancelScan();
         }
@@ -1309,7 +1465,7 @@
         }
 
         // Load machine list
-        function loadMachineList() {
+        function loadMachineList(silent = false) {
             if (isLocalStorageMode) {
                 const storedList = localStorage.getItem('machineList');
                 if (storedList) {
@@ -1320,6 +1476,11 @@
                     }
                 }
                 updateStatistics();
+                if (currentView === 'location') {
+                    loadLocationsList(silent);
+                } else if (currentView === 'list') {
+                    loadMachineListView(silent);
+                }
             } else {
                 fetch(SCRIPT_URL + '?action=getMachineList')
                     .then(response => response.json())
@@ -1327,14 +1488,28 @@
                         if (data.status === 'success') {
                             machineList = data.machines;
                             updateStatistics();
+                            
+                            // Update current view if on locations tab
+                            if (document.getElementById('locations-tab').classList.contains('active')) {
+                                if (currentView === 'location') {
+                                    loadLocationsList(silent);
+                                } else if (currentView === 'list') {
+                                    loadMachineListView(silent);
+                                }
+                            }
                         } else {
-                            console.error('Error loading machine list:', data.message);
+                            if (!silent) {
+                                console.error('Error loading machine list:', data.message);
+                            }
                         }
                     })
                     .catch(error => {
-                        console.error('Error:', error);
+                        if (!silent) {
+                            console.error('Error:', error);
+                        }
                     });
             }
+            isInitialLoad = false;
         }
 
         // Save machine list
@@ -1349,7 +1524,7 @@
             document.getElementById('list-view-btn').classList.remove('active');
             document.getElementById('location-view').style.display = 'block';
             document.getElementById('list-view').style.display = 'none';
-            loadLocationsList();
+            loadLocationsList(!isInitialLoad);
         }
 
         // Show list view
@@ -1359,28 +1534,30 @@
             document.getElementById('location-view-btn').classList.remove('active');
             document.getElementById('location-view').style.display = 'none';
             document.getElementById('list-view').style.display = 'block';
-            loadMachineListView();
+            loadMachineListView(!isInitialLoad);
         }
 
         // Load locations and machines
-        function loadLocationsAndMachines() {
+        function loadLocationsAndMachines(silent = false) {
             if (currentView === 'location') {
-                loadLocationsList();
+                loadLocationsList(silent);
             } else {
-                loadMachineListView();
+                loadMachineListView(silent);
             }
         }
 
         // Load locations list
-        function loadLocationsList() {
+        function loadLocationsList(silent = false) {
             const container = document.getElementById('locations-container');
             
             if (machineList.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-4 text-muted">
-                        No machines registered yet
-                    </div>
-                `;
+                if (!silent || isInitialLoad) {
+                    container.innerHTML = `
+                        <div class="text-center py-4 text-muted">
+                            ${isInitialLoad ? '<div class="loading-spinner"></div>Loading locations...' : 'No machines registered yet'}
+                        </div>
+                    `;
+                }
                 return;
             }
             
@@ -1448,15 +1625,17 @@
         }
 
         // Load machine list view
-        function loadMachineListView() {
+        function loadMachineListView(silent = false) {
             const container = document.getElementById('machine-list-container');
             
             if (machineList.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-4 text-muted">
-                        No machines registered yet
-                    </div>
-                `;
+                if (!silent || isInitialLoad) {
+                    container.innerHTML = `
+                        <div class="text-center py-4 text-muted">
+                            ${isInitialLoad ? '<div class="loading-spinner"></div>Loading machines...' : 'No machines registered yet'}
+                        </div>
+                    `;
+                }
                 return;
             }
             
@@ -1581,6 +1760,107 @@
         // Scroll to top
         function scrollToTop() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // Start automatic refresh
+        function startAutoRefresh() {
+            // Clear any existing interval
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+            
+            // Refresh every 30 seconds
+            refreshInterval = setInterval(() => {
+                loadMachineList(true); // Silent refresh
+            }, 30000);
+        }
+        
+        // Stop automatic refresh
+        function stopAutoRefresh() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+            }
+        }
+        
+        // Cleanup when page is hidden or unloaded
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                stopAutoRefresh();
+            } else {
+                startAutoRefresh();
+            }
+        });
+        
+        window.addEventListener('beforeunload', function() {
+            stopAutoRefresh();
+        });
+        
+        // Check if Font Awesome loaded - Enhanced
+        function checkFontAwesome() {
+            const testIcon = document.createElement('i');
+            testIcon.className = 'fas fa-home';
+            testIcon.style.position = 'absolute';
+            testIcon.style.left = '-9999px';
+            testIcon.style.fontFamily = 'Font Awesome 6 Free';
+            testIcon.style.fontWeight = '900';
+            document.body.appendChild(testIcon);
+            
+            const computed = window.getComputedStyle(testIcon, ':before');
+            const content = computed.getPropertyValue('content');
+            const fontFamily = computed.getPropertyValue('font-family');
+            
+            document.body.removeChild(testIcon);
+            
+            // Check if Font Awesome loaded properly
+            const isLoaded = content && content !== 'none' && content !== '' && 
+                            (fontFamily.includes('Font Awesome') || fontFamily.includes('FontAwesome'));
+            
+            if (!isLoaded) {
+                console.warn('Font Awesome icons may not be loading properly');
+                console.log('Computed font-family:', fontFamily);
+                console.log('Computed content:', content);
+                
+                // Add visible text labels as backup
+                setTimeout(() => {
+                    addIconFallbacks();
+                }, 100);
+            } else {
+                console.log('Font Awesome loaded successfully');
+            }
+        }
+        
+        // Add text fallbacks if icons don't load
+        function addIconFallbacks() {
+            const iconMappings = {
+                'fa-plus-circle': '+ Add',
+                'fa-qrcode': '⚏ Scan',
+                'fa-map-marker-alt': '📍 Locations',
+                'fa-cogs': '⚙ Settings',
+                'fa-search': '🔍',
+                'fa-download': '⬇ Download',
+                'fa-print': '🖨 Print',
+                'fa-arrow-up': '⬆',
+                'fa-check-circle': '✓',
+                'fa-times': '✕',
+                'fa-eye': '👁 View',
+                'fa-trash': '🗑 Delete'
+            };
+            
+            // Find all FontAwesome icons and add text fallbacks
+            const icons = document.querySelectorAll('[class*="fa-"]');
+            icons.forEach(icon => {
+                for (const [faClass, fallbackText] of Object.entries(iconMappings)) {
+                    if (icon.classList.contains(faClass)) {
+                        if (!icon.textContent.trim()) {
+                            icon.style.fontFamily = 'inherit';
+                            icon.style.fontSize = '0.9em';
+                            icon.textContent = fallbackText;
+                        }
+                        break;
+                    }
+                }
+            });
         }
     </script>
 </body>
