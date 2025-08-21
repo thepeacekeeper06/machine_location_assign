@@ -426,20 +426,70 @@
         async function loadMachines() {
             try {
                 showMessage('Loading machines...', 'info');
-                const response = await fetch(`${SCRIPT_URL}?action=getAllMachines`);
-                const data = await response.json();
                 
-                if (data.success) {
-                    machines = data.machines || [];
+                // Use JSONP approach for CORS compatibility
+                const response = await makeGASRequest('getAllMachines');
+                
+                if (response.success) {
+                    machines = response.machines || [];
                     hideMessage();
                 } else {
-                    showMessage('Failed to load machines: ' + data.error, 'error');
+                    showMessage('Failed to load machines: ' + response.error, 'error');
                 }
             } catch (error) {
                 console.error('Error loading machines:', error);
                 showMessage('Failed to connect to database', 'error');
                 machines = []; // Fallback to empty array
             }
+        }
+
+        // CORS-compatible function to make requests to Google Apps Script
+        async function makeGASRequest(action, data = null, method = 'GET') {
+            return new Promise((resolve, reject) => {
+                const callbackName = 'callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                
+                window[callbackName] = function(response) {
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    resolve(response);
+                };
+                
+                const script = document.createElement('script');
+                let url = SCRIPT_URL + '?callback=' + callbackName;
+                
+                if (method === 'GET') {
+                    url += '&action=' + action;
+                    if (data) {
+                        Object.keys(data).forEach(key => {
+                            url += '&' + key + '=' + encodeURIComponent(data[key]);
+                        });
+                    }
+                } else {
+                    // For POST requests, we'll use URL parameters as well
+                    url += '&action=' + action;
+                    if (data) {
+                        url += '&data=' + encodeURIComponent(JSON.stringify(data));
+                    }
+                }
+                
+                script.onerror = () => {
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    reject(new Error('Failed to load script'));
+                };
+                
+                script.src = url;
+                document.head.appendChild(script);
+                
+                // Timeout after 30 seconds
+                setTimeout(() => {
+                    if (window[callbackName]) {
+                        document.head.removeChild(script);
+                        delete window[callbackName];
+                        reject(new Error('Request timeout'));
+                    }
+                }, 30000);
+            });
         }
 
         function showView(viewName) {
@@ -487,19 +537,8 @@
             };
             
             try {
-                // Send to Google Sheets
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'addMachine',
-                        data: machineData
-                    })
-                });
-                
-                const result = await response.json();
+                // Send to Google Sheets using CORS-compatible method
+                const result = await makeGASRequest('addMachine', machineData, 'GET');
                 
                 if (result.success) {
                     const machineId = result.machineId;
@@ -626,19 +665,10 @@
             try {
                 showMessage('Updating location...', 'info');
                 
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'updateLocation',
-                        machineId: currentMachineId,
-                        newLocation: newLocation
-                    })
-                });
-                
-                const result = await response.json();
+                const result = await makeGASRequest('updateLocation', {
+                    machineId: currentMachineId,
+                    newLocation: newLocation
+                }, 'GET');
                 
                 if (result.success) {
                     // Update local array
@@ -734,18 +764,9 @@
                 try {
                     showMessage('Deleting machine...', 'info');
                     
-                    const response = await fetch(SCRIPT_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            action: 'deleteMachine',
-                            machineId: machineId
-                        })
-                    });
-                    
-                    const result = await response.json();
+                    const result = await makeGASRequest('deleteMachine', {
+                        machineId: machineId
+                    }, 'GET');
                     
                     if (result.success) {
                         // Remove from local array
